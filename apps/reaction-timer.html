@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Reaction Timer | kkoziarski</title>
+	<link rel="icon" href="../favicon.ico" type="image/x-icon" />
+	<style>
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		:root {
+			--bg: #0d1117;
+			--card: rgba(22, 27, 34, 0.85);
+			--text: #e6edf3;
+			--muted: #8b949e;
+			--accent: #58a6ff;
+			--green: #3fb950;
+			--red: #f85149;
+			--border: rgba(240, 246, 252, 0.1);
+		}
+		@media (prefers-color-scheme: light) {
+			:root {
+				--bg: #f6f8fa;
+				--card: rgba(255,255,255,0.9);
+				--text: #1f2328;
+				--muted: #656d76;
+				--accent: #0969da;
+				--green: #1a7f37;
+				--red: #cf222e;
+				--border: rgba(31,35,40,0.1);
+			}
+		}
+		body {
+			font-family: 'Segoe UI', -apple-system, sans-serif;
+			background: var(--bg);
+			color: var(--text);
+			min-height: 100vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			padding: 1rem;
+			user-select: none;
+			-webkit-user-select: none;
+		}
+		.back {
+			position: fixed;
+			top: 1rem;
+			left: 1rem;
+			color: var(--muted);
+			text-decoration: none;
+			font-size: 0.85rem;
+			z-index: 10;
+		}
+		.back:hover { color: var(--accent); }
+		.box {
+			width: min(500px, 90vw);
+			height: min(350px, 60vh);
+			border-radius: 16px;
+			border: 1px solid var(--border);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			transition: background 0.15s;
+			text-align: center;
+			padding: 2rem;
+			-webkit-tap-highlight-color: transparent;
+		}
+		.box.waiting { background: var(--card); }
+		.box.ready { background: var(--red); }
+		.box.go { background: var(--green); }
+		.box.result { background: var(--card); }
+		.box.too-soon { background: var(--red); }
+		.msg {
+			font-size: 1.6rem;
+			font-weight: 600;
+			margin-bottom: 0.5rem;
+		}
+		.sub { font-size: 1rem; color: var(--muted); }
+		.box.ready .sub, .box.go .sub { color: rgba(255,255,255,0.8); }
+		.box.ready .msg, .box.go .msg { color: #fff; }
+		.box.too-soon .msg, .box.too-soon .sub { color: #fff; }
+		.time {
+			font-size: 3.5rem;
+			font-weight: 700;
+			color: var(--accent);
+			margin: 0.25rem 0;
+		}
+		.best {
+			margin-top: 1rem;
+			font-size: 0.85rem;
+			color: var(--muted);
+		}
+	</style>
+</head>
+<body>
+	<a href="./" class="back">&larr; Back to Apps</a>
+	<div class="box waiting" id="box" onclick="handleClick()">
+		<div class="msg">Reaction Timer</div>
+		<div class="sub">Click to start</div>
+	</div>
+	<div class="best" id="best"></div>
+	<script>
+		let state = 'waiting';
+		let timeout = null;
+		let startTime = 0;
+		let bestTime = Infinity;
+		const box = document.getElementById('box');
+		const bestEl = document.getElementById('best');
+
+		function handleClick() {
+			if (state === 'waiting') {
+				state = 'ready';
+				box.className = 'box ready';
+				box.querySelector('.msg').textContent = 'Wait for green...';
+				box.querySelector('.sub').textContent = "Don't click yet!";
+				timeout = setTimeout(() => {
+					state = 'go';
+					box.className = 'box go';
+					box.querySelector('.msg').textContent = 'CLICK NOW!';
+					box.querySelector('.sub').textContent = '';
+					startTime = performance.now();
+				}, 1000 + Math.random() * 4000);
+			} else if (state === 'ready') {
+				clearTimeout(timeout);
+				state = 'too-soon';
+				box.className = 'box too-soon';
+				box.querySelector('.msg').textContent = 'Too soon!';
+				box.querySelector('.sub').textContent = 'Click to try again';
+				state = 'waiting';
+			} else if (state === 'go') {
+				const ms = Math.round(performance.now() - startTime);
+				state = 'result';
+				box.className = 'box result';
+				box.innerHTML = `<div class="msg">Your reaction time</div><div class="time">${ms} ms</div><div class="sub">Click to try again</div>`;
+				if (ms < bestTime) {
+					bestTime = ms;
+					bestEl.textContent = `Best: ${bestTime} ms`;
+				}
+				state = 'waiting';
+			}
+		}
+	</script>
+</body>
+</html>
